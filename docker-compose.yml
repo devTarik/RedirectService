@@ -1,0 +1,39 @@
+volumes:
+  postgres_vol:
+
+networks:
+  appnet:
+
+
+services:
+
+  postgres:
+    image: postgres:16
+    restart: always
+    networks:
+     - appnet
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres_vol:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: always
+    networks:
+      - appnet
+    volumes:
+      - .:/app
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
